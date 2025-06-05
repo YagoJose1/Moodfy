@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'dart:convert';
 
 void main() {
@@ -9,7 +8,7 @@ void main() {
 
 class MoodEntry {
   final String humor;
-  final String anotacao;
+  String anotacao;
   final String data;
 
   MoodEntry(this.humor, this.anotacao, this.data);
@@ -20,18 +19,14 @@ class MoodEntry {
         'data': data,
       };
 
-  static MoodEntry fromJson(Map<String, dynamic> json) => MoodEntry(
-        json['humor'],
-        json['anotacao'],
-        json['data'],
-      );
+  static MoodEntry fromJson(Map<String, dynamic> json) =>
+      MoodEntry(json['humor'], json['anotacao'], json['data']);
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'Moodify',
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: Color(0xFF121212),
@@ -51,6 +46,69 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+class SplashScreen extends StatefulWidget {
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _opacityAnim;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(seconds: 3),
+    );
+
+    _opacityAnim = TweenSequence([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.0), weight: 50),  // Fade-in
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.0), weight: 50),  // Fade-out
+    ]).animate(_controller);
+
+    _controller.forward();
+
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => LoginScreen()),
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Color(0xFF121212),
+      body: Center(
+        child: FadeTransition(
+          opacity: _opacityAnim,
+          child: Text(
+            'Moodfy',
+            style: TextStyle(
+              fontSize: 48,
+              fontWeight: FontWeight.bold,
+              color: Colors.cyanAccent,
+              fontFamily: 'Roboto', // ou outra fonte que usar
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -69,11 +127,15 @@ class _LoginScreenState extends State<LoginScreen> {
     if (savedUser == null || savedPass == null) {
       await prefs.setString('user', userController.text);
       await prefs.setString('pass', passController.text);
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomeScreen()));
-    } else if (savedUser == userController.text && savedPass == passController.text) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomeScreen()));
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => HomeScreen()));
+    } else if (savedUser == userController.text &&
+        savedPass == passController.text) {
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => HomeScreen()));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Usuário ou senha incorretos')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Usuário ou senha incorretos')));
     }
   }
 
@@ -85,9 +147,15 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Login Moodify', style: TextStyle(fontSize: 28, color: Colors.cyanAccent)),
-            TextField(controller: userController, decoration: InputDecoration(labelText: 'Usuário')),
-            TextField(controller: passController, obscureText: true, decoration: InputDecoration(labelText: 'Senha')),
+            Text('Login Moodify',
+                style: TextStyle(fontSize: 28, color: Colors.cyanAccent)),
+            TextField(
+                controller: userController,
+                decoration: InputDecoration(labelText: 'Usuário')),
+            TextField(
+                controller: passController,
+                obscureText: true,
+                decoration: InputDecoration(labelText: 'Senha')),
             SizedBox(height: 20),
             ElevatedButton(onPressed: _login, child: Text('Entrar')),
           ],
@@ -107,9 +175,17 @@ class _HomeScreenState extends State<HomeScreen> {
   final _controller = TextEditingController();
 
   final List<Map<String, dynamic>> _emocoes = [
-    {'icone': Icons.sentiment_very_satisfied, 'label': 'Feliz', 'color': Colors.green},
+    {
+      'icone': Icons.sentiment_very_satisfied,
+      'label': 'Feliz',
+      'color': Colors.green
+    },
     {'icone': Icons.sentiment_neutral, 'label': 'Neutro', 'color': Colors.yellow},
-    {'icone': Icons.sentiment_very_dissatisfied, 'label': 'Triste', 'color': Colors.red},
+    {
+      'icone': Icons.sentiment_very_dissatisfied,
+      'label': 'Triste',
+      'color': Colors.red
+    },
     {'icone': Icons.mood_bad, 'label': 'Raiva', 'color': Colors.deepOrange},
     {'icone': Icons.sentiment_dissatisfied, 'label': 'Ansioso', 'color': Colors.amber},
     {'icone': Icons.mood, 'label': 'Animado', 'color': Colors.lightBlue},
@@ -133,7 +209,8 @@ class _HomeScreenState extends State<HomeScreen> {
     _controller.clear();
     _humorSelecionado = '';
 
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Anotação salva!')));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('Anotação salva!')));
   }
 
   @override
@@ -144,63 +221,67 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            Text('Como você está se sentindo hoje?', style: TextStyle(fontSize: 18)),
+            Text('Como você está se sentindo hoje?',
+                style: TextStyle(fontSize: 18)),
             SizedBox(height: 20),
             Wrap(
-  spacing: 15,
-  runSpacing: 15,
-  alignment: WrapAlignment.center,
-  children: _emocoes.map((emo) {
-    final selecionado = _humorSelecionado == emo['label'];
-    return GestureDetector(
-      onTap: () {
-        setState(() => _humorSelecionado = emo['label']);
-      },
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 300),
-        padding: EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: selecionado ? emo['color'].withOpacity(0.15) : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: selecionado ? emo['color'] : Colors.white24,
-            width: 2,
-          ),
-          boxShadow: selecionado
-              ? [
-                  BoxShadow(
-                    color: emo['color'].withOpacity(0.8),
-                    blurRadius: 10,
-                    spreadRadius: 1,
-                    offset: Offset(0, 0),
+              spacing: 15,
+              runSpacing: 15,
+              alignment: WrapAlignment.center,
+              children: _emocoes.map((emo) {
+                final selecionado = _humorSelecionado == emo['label'];
+                return GestureDetector(
+                  onTap: () {
+                    setState(() => _humorSelecionado = emo['label']);
+                  },
+                  child: AnimatedContainer(
+                    duration: Duration(milliseconds: 300),
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: selecionado
+                          ? emo['color'].withOpacity(0.15)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: selecionado ? emo['color'] : Colors.white24,
+                        width: 2,
+                      ),
+                      boxShadow: selecionado
+                          ? [
+                              BoxShadow(
+                                color: emo['color'].withOpacity(0.8),
+                                blurRadius: 10,
+                                spreadRadius: 1,
+                                offset: Offset(0, 0),
+                              ),
+                            ]
+                          : [],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          emo['icone'],
+                          size: 40,
+                          color: selecionado ? emo['color'] : Colors.white54,
+                        ),
+                        SizedBox(height: 5),
+                        Text(
+                          emo['label'],
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: selecionado
+                                ? emo['color']
+                                : Colors.white54,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ]
-              : [],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              emo['icone'],
-              size: 40,
-              color: selecionado ? emo['color'] : Colors.white54,
+                );
+              }).toList(),
             ),
-            SizedBox(height: 5),
-            Text(
-              emo['label'],
-              style: TextStyle(
-                fontSize: 12,
-                color: selecionado ? emo['color'] : Colors.white54,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }).toList(),
-),
-
             SizedBox(height: 20),
             TextField(
               controller: _controller,
@@ -215,7 +296,8 @@ class _HomeScreenState extends State<HomeScreen> {
             SizedBox(height: 20),
             ElevatedButton(onPressed: _salvarAnotacao, child: Text('Salvar')),
             ElevatedButton(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => HistoricoScreen())),
+              onPressed: () => Navigator.push(
+                  context, MaterialPageRoute(builder: (_) => HistoricoScreen())),
               child: Text('Ver Histórico'),
             ),
           ],
@@ -225,37 +307,104 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class HistoricoScreen extends StatelessWidget {
-  Future<List<MoodEntry>> _loadData() async {
+class HistoricoScreen extends StatefulWidget {
+  @override
+  _HistoricoScreenState createState() => _HistoricoScreenState();
+}
+
+class _HistoricoScreenState extends State<HistoricoScreen> {
+  List<MoodEntry> entries = [];
+
+  Future<void> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
     List<String> data = prefs.getStringList('mood_entries') ?? [];
-    return data.map((e) => MoodEntry.fromJson(jsonDecode(e))).toList();
+    setState(() {
+      entries = data.map((e) => MoodEntry.fromJson(jsonDecode(e))).toList();
+    });
+  }
+
+  Future<void> _saveData() async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String> jsonData =
+        entries.map((entry) => jsonEncode(entry.toJson())).toList();
+    await prefs.setStringList('mood_entries', jsonData);
+  }
+
+  void _editarNota(int index) async {
+    TextEditingController editController =
+        TextEditingController(text: entries[index].anotacao);
+
+    await showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('Editar anotação'),
+        content: TextField(
+          controller: editController,
+          maxLines: 5,
+          decoration: InputDecoration(
+              hintText: 'Edite sua anotação', border: OutlineInputBorder()),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context), child: Text('Cancelar')),
+          TextButton(
+              onPressed: () {
+                setState(() {
+                  entries[index].anotacao = editController.text;
+                });
+                _saveData();
+                Navigator.pop(context);
+              },
+              child: Text('Salvar')),
+        ],
+      ),
+    );
+  }
+
+  void _excluirNota(int index) {
+    setState(() {
+      entries.removeAt(index);
+    });
+    _saveData();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Histórico')),
-      body: FutureBuilder<List<MoodEntry>>(
-        future: _loadData(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
-          final items = snapshot.data!;
-          return ListView.builder(
-            itemCount: items.length,
-            itemBuilder: (context, i) {
-              return Card(
-                color: Colors.white10,
-                margin: EdgeInsets.all(10),
-                child: ListTile(
-                  title: Text(items[i].anotacao),
-                  subtitle: Text('Data: ${items[i].data} • Humor: ${items[i].humor}'),
-                ),
-              );
-            },
-          );
-        },
-      ),
+      body: entries.isEmpty
+          ? Center(child: Text('Sem anotações salvas'))
+          : ListView.builder(
+              itemCount: entries.length,
+              itemBuilder: (context, i) {
+                return Card(
+                  color: Colors.white10,
+                  margin: EdgeInsets.all(10),
+                  child: ListTile(
+                    title: Text(entries[i].anotacao),
+                    subtitle:
+                        Text('Data: ${entries[i].data} • Humor: ${entries[i].humor}'),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                            onPressed: () => _editarNota(i),
+                            icon: Icon(Icons.edit, color: Colors.cyanAccent)),
+                        IconButton(
+                            onPressed: () => _excluirNota(i),
+                            icon: Icon(Icons.delete, color: Colors.redAccent)),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
     );
   }
 }
